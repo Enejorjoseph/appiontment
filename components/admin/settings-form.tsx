@@ -17,7 +17,7 @@ export function SettingsForm({ settings }: { settings: ClinicSettings }) {
 
       <fieldset className="space-y-4">
         <legend className="text-sm font-semibold text-navy-800">Clinic details</legend>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Clinic name" htmlFor="clinicName" required error={state.errors.clinicName}>
             <Input id="clinicName" name="clinicName" defaultValue={settings.clinicName} required invalid={Boolean(state.errors.clinicName)} />
           </Field>
@@ -28,7 +28,7 @@ export function SettingsForm({ settings }: { settings: ClinicSettings }) {
         <Field label="Description" htmlFor="description" error={state.errors.description}>
           <Textarea id="description" name="description" rows={4} defaultValue={settings.description} invalid={Boolean(state.errors.description)} />
         </Field>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Phone" htmlFor="phone" error={state.errors.phone}>
             <Input id="phone" name="phone" defaultValue={settings.phone} invalid={Boolean(state.errors.phone)} />
           </Field>
@@ -43,7 +43,7 @@ export function SettingsForm({ settings }: { settings: ClinicSettings }) {
 
       <fieldset className="space-y-4 border-t border-navy-100 pt-6">
         <legend className="text-sm font-semibold text-navy-800">Booking rules</legend>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field
             label="Slot interval (minutes)"
             htmlFor="slotIntervalMinutes"

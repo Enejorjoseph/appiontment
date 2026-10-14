@@ -52,7 +52,7 @@ export default async function AdminAppointmentsPage({
       <Card>
         <CardHeader title="Search & filter" />
         <CardBody>
-          <form method="get" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 lg:items-end">
+          <form method="get" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5 lg:items-end">
             <Field label="Search" htmlFor="query" className="lg:col-span-2">
               <Input
                 id="query"

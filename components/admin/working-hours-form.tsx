@@ -38,7 +38,7 @@ export function WorkingHoursForm({ hours }: { hours: WorkingHour[] }) {
             key={weekday}
             className="rounded-lg border border-navy-100 bg-white p-3 lg:border-0 lg:bg-transparent lg:p-0"
           >
-            <div className="grid gap-2 lg:grid-cols-[1fr_auto_auto_auto_auto_auto] lg:items-center">
+            <div className="grid grid-cols-1 gap-2 lg:grid-cols-[1fr_auto_auto_auto_auto_auto] lg:items-center">
               <label className="flex items-center gap-2 text-sm font-medium text-navy-700">
                 {WEEKDAY_NAMES[weekday]}
               </label>

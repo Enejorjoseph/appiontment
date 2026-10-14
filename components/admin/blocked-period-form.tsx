@@ -15,7 +15,7 @@ export function BlockedPeriodForm({ today }: { today: string }) {
     <form action={formAction} className="space-y-4">
       {state.message ? <Alert variant={state.ok ? "success" : "error"}>{state.message}</Alert> : null}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Date" htmlFor="block-date" required error={state.errors.date}>
           <Input
             id="block-date"
@@ -41,7 +41,7 @@ export function BlockedPeriodForm({ today }: { today: string }) {
       </div>
 
       {mode === "time-range" ? (
-        <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="From" htmlFor="block-start" required error={state.errors.startTime}>
             <Input id="block-start" name="startTime" type="time" defaultValue="09:00" invalid={Boolean(state.errors.startTime)} />
           </Field>

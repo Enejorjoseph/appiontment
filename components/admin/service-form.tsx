@@ -17,7 +17,7 @@ export function ServiceForm({ service }: { service?: Service }) {
       {state.message ? <Alert variant={state.ok ? "success" : "error"}>{state.message}</Alert> : null}
       {service ? <input type="hidden" name="id" value={service.id} /> : null}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
           label="Service name"
           htmlFor={`name-${service?.id ?? "new"}`}
@@ -62,7 +62,7 @@ export function ServiceForm({ service }: { service?: Service }) {
         />
       </Field>
 
-      <div className="grid gap-4 sm:grid-cols-2 sm:items-end">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:items-end">
         <Field
           label="Price (₦)"
           htmlFor={`price-${service?.id ?? "new"}`}

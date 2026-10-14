@@ -51,7 +51,7 @@ export default async function AdminDashboardPage() {
         </div>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <StatCard label="Total" value={stats.total} accent="navy" />
         <StatCard label="Today" value={stats.today} accent="brand" hint={formatDateMedium(today)} />
         <StatCard label="Upcoming" value={stats.upcoming} accent="violet" hint="Future active bookings" />
@@ -80,7 +80,7 @@ export default async function AdminDashboardPage() {
         </CardBody>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader
             title="Upcoming appointments"

@@ -46,12 +46,12 @@ export default async function AppointmentDetailPage({
         action={<StatusBadge status={appointment.status} />}
       />
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <Card>
             <CardHeader title="Appointment information" />
             <CardBody>
-              <dl className="grid gap-4 sm:grid-cols-2">
+              <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Detail label="Reference" value={<span className="font-mono">{appointment.reference}</span>} />
                 <Detail label="Status" value={<StatusBadge status={appointment.status} />} />
                 <Detail label="Service" value={appointment.serviceName} />
@@ -83,7 +83,7 @@ export default async function AppointmentDetailPage({
 
           <Card>
             <CardHeader title="Patient contact" description="Information needed to manage this appointment." />
-            <CardBody className="grid gap-4 sm:grid-cols-3">
+            <CardBody className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <Detail label="Name" value={appointment.patientName} />
               <Detail
                 label="Email"
