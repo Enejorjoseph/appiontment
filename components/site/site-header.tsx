@@ -50,7 +50,9 @@ export function SiteHeader({
           <Logo />
           <span className="text-sm font-semibold leading-tight text-navy-800">
             {clinicName}
-            <span className="block text-[11px] font-normal text-slate-500">Appointment System</span>
+            <span className="hidden text-[11px] font-normal text-slate-500 sm:block">
+              Appointment System
+            </span>
           </span>
         </Link>
 
