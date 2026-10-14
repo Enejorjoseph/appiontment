@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", monospace;
+
+  --color-navy-50: #eef2ff;
+  --color-navy-100: #e0e7ff;
+  --color-navy-200: #c7d2fe;
+  --color-navy-300: #a5b4fc;
+  --color-navy-400: #818cf8;
+  --color-navy-500: #6366f1;
+  --color-navy-600: #4f46e5;
+  --color-navy-700: #4338ca;
+  --color-navy-800: #312e81;
+  --color-navy-900: #1e1b4b;
+
+  --color-brand-50: #e7fffd;
+  --color-brand-100: #c2fff8;
+  --color-brand-200: #89fff0;
+  --color-brand-300: #46fbe4;
+  --color-brand-400: #12edcf;
+  --color-brand-500: #00d1b3;
+  --color-brand-600: #00a992;
+  --color-brand-700: #028674;
+  --color-brand-800: #086a5d;
+  --color-brand-900: #0c574d;
+
+  --color-sand-50: #f8fafc;
+  --color-sand-100: #f1f5f9;
+  --color-sand-200: #e2e8f0;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: #eceefb;
+  background-image:
+    radial-gradient(60rem 60rem at 100% -10%, rgba(0, 209, 179, 0.2), transparent 60%),
+    radial-gradient(50rem 50rem at -10% 0%, rgba(99, 102, 241, 0.18), transparent 55%),
+    radial-gradient(45rem 45rem at 50% 120%, rgba(18, 237, 207, 0.12), transparent 60%),
+    linear-gradient(120deg, rgba(255, 255, 255, 0.35), rgba(238, 242, 255, 0.2));
+  background-repeat: no-repeat;
+  color: #0f172a;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+@keyframes cp-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cp-fade-in {
+  animation: cp-fade-in 0.25s ease-out;
+}
+
+.cp-grid {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.cp-dots {
+  background-image: radial-gradient(rgba(49, 46, 129, 0.09) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+.cp-gradient-text {
+  background-image: linear-gradient(90deg, #2ff3d6, #8ea2ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@keyframes cp-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.cp-float {
+  animation: cp-float 7s ease-in-out infinite;
+}
