@@ -43,7 +43,7 @@ const EXPLORE_LINKS = [
 
 const BOOKING_LINKS = [
   { href: "/book", label: "Book an appointment" },
-  { href: "/find", label: "Find my appointment" },
+  { href: "/appointments", label: "View appointments" },
   { href: "/admin/login", label: "Staff login" },
 ];
 

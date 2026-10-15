@@ -4,9 +4,13 @@ import { buttonClass } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Field, Input, Select } from "@/components/ui/field";
 import { PageHeader } from "@/components/ui/page-header";
-import { listAppointments } from "@/lib/appointments";
+import { Pagination } from "@/components/ui/pagination";
+import { listAppointmentsPage } from "@/lib/appointments";
 import { isAppointmentStatus, STATUS_LABELS } from "@/lib/status";
 import { listServices } from "@/lib/services";
+import { getSettings } from "@/lib/settings";
+import { timeInTimeZone, todayInTimeZone } from "@/lib/datetime";
+import { PAGE_SIZE, parsePage } from "@/lib/pagination";
 
 export const metadata = { title: "Appointments" };
 
@@ -27,14 +31,32 @@ export default async function AdminAppointmentsPage({
   const serviceParam = first(params.service);
   const status = isAppointmentStatus(statusParam) ? statusParam : undefined;
   const serviceId = serviceParam && Number.isInteger(Number(serviceParam)) ? Number(serviceParam) : undefined;
+  const requestedPage = parsePage(params.page);
 
-  const appointments = await listAppointments({
-    query: query || undefined,
-    date: date || undefined,
-    status,
-    serviceId,
-  });
+  const result = await listAppointmentsPage(
+    {
+      query: query || undefined,
+      date: date || undefined,
+      status,
+      serviceId,
+    },
+    { page: requestedPage, pageSize: PAGE_SIZE },
+  );
   const services = await listServices();
+  const settings = await getSettings();
+  const today = todayInTimeZone(settings.timezone);
+  const now = timeInTimeZone(settings.timezone);
+
+  const makeHref = (targetPage: number) => {
+    const sp = new URLSearchParams();
+    if (query) sp.set("query", query);
+    if (date) sp.set("date", date);
+    if (serviceParam) sp.set("service", serviceParam);
+    if (statusParam) sp.set("status", statusParam);
+    if (targetPage > 1) sp.set("page", String(targetPage));
+    const qs = sp.toString();
+    return qs ? `/admin/appointments?${qs}` : "/admin/appointments";
+  };
 
   return (
     <div className="space-y-6">
@@ -97,12 +119,21 @@ export default async function AdminAppointmentsPage({
       </Card>
 
       <Card>
-        <CardHeader title={`${appointments.length} appointment${appointments.length === 1 ? "" : "s"}`} />
-        <CardBody>
+        <CardHeader title={`${result.total} appointment${result.total === 1 ? "" : "s"}`} />
+        <CardBody className="space-y-4">
           <AppointmentsTable
-            appointments={appointments}
+            appointments={result.items}
+            today={today}
+            now={now}
             emptyTitle="No matching appointments"
             emptyDescription="Try adjusting the search text or filters."
+          />
+          <Pagination
+            page={result.page}
+            totalPages={result.totalPages}
+            totalItems={result.total}
+            pageSize={result.pageSize}
+            makeHref={makeHref}
           />
         </CardBody>
       </Card>

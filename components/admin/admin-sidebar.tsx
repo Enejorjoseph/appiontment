@@ -147,7 +147,9 @@ function LogoutForm() {
   return (
     <form action={logoutAction}>
       <ConfirmSubmitButton
-        message="Log out of the staff dashboard?"
+        title="Log out"
+        message="You'll be signed out of the staff dashboard."
+        confirmLabel="Log out"
         className="w-full rounded-lg border border-navy-600 px-3 py-2 text-sm font-medium text-navy-100 transition-colors hover:bg-navy-700 hover:text-white"
       >
         Log out

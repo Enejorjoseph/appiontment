@@ -64,7 +64,10 @@ export function FindAppointmentForm({ initialReference = "" }: { initialReferenc
       <div>
         {appointment ? (
           <Card className="cp-fade-in">
-            <CardHeader title="Appointment found" action={<StatusBadge status={appointment.status} />} />
+            <CardHeader
+              title="Appointment found"
+              action={<StatusBadge status={appointment.status} phase={appointment.phase} />}
+            />
             <CardBody className="space-y-4">
               <dl className="grid gap-3 sm:grid-cols-2 text-sm">
                 <Info label="Reference" value={appointment.reference} />
@@ -83,8 +86,9 @@ export function FindAppointmentForm({ initialReference = "" }: { initialReferenc
                 ) : null}
               </dl>
               <Alert variant="info">
-                To cancel or reschedule, contact the clinic with your reference. Staff will update the
-                appointment and release the time slot.
+                {appointment.phase === "past"
+                  ? "This appointment's date has already passed, so it can no longer be cancelled or rescheduled through the assistant. Contact the clinic if you need help."
+                  : "To cancel or reschedule, contact the clinic with your reference. Staff will update the appointment and release the time slot."}
               </Alert>
             </CardBody>
           </Card>

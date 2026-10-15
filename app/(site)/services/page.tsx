@@ -19,10 +19,10 @@ export default async function ServicesPage() {
         description="Every listed service shows its price in Nigerian naira and how long the appointment lasts. Pick one and we'll show you only the genuinely open slots."
         action={
           <Link
-            href="/find"
+            href="/appointments"
             className={buttonClass({ variant: "outline", size: "lg", className: HERO_ACTION_OUTLINE })}
           >
-            Find my appointment
+            View appointments
           </Link>
         }
       />

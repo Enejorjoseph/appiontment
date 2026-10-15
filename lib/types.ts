@@ -3,7 +3,8 @@ export type AppointmentStatus =
   | "confirmed"
   | "cancelled"
   | "completed"
-  | "rescheduled";
+  | "rescheduled"
+  | "no_show";
 
 export type AdminRole = "admin" | "staff";
 
@@ -133,6 +134,7 @@ export interface AppointmentStats {
   completed: number;
   cancelled: number;
   rescheduled: number;
+  noShow: number;
 }
 
 export interface ServiceInput {

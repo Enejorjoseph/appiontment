@@ -1,3 +1,4 @@
+import type { AppointmentPhase } from "./appointment-phase";
 import type { AppointmentStatus } from "./types";
 
 export type FieldErrors = Record<string, string>;
@@ -20,6 +21,7 @@ export interface LookupAppointment {
   startTime: string;
   endTime: string;
   status: AppointmentStatus;
+  phase: AppointmentPhase;
   reason: string | null;
   createdAt: string;
 }

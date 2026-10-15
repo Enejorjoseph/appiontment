@@ -148,7 +148,11 @@ export function CancelForm({ id }: { id: number }) {
         <Textarea id="cancel-reason" name="reason" rows={3} placeholder="Reason for cancelling…" />
       </Field>
       <ConfirmSubmitButton
-        message="Cancel this appointment? The patient will be notified and the slot will be released."
+        title="Cancel appointment?"
+        message="The patient will be notified and the time slot will be released. This cannot be undone."
+        confirmLabel="Cancel appointment"
+        cancelLabel="Keep it"
+        destructive
         disabled={pending}
         className={buttonClass({ variant: "danger", className: "w-full" })}
       >

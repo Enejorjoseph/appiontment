@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
+  deleteAppointment,
   getAppointmentById,
   rescheduleAppointment,
   updateAppointmentStatus,
@@ -10,7 +11,9 @@ import {
 import { createBlockedPeriod, deleteBlockedPeriod } from "@/lib/blocked";
 import { destroySession, getCurrentAdmin, login, purgeExpiredSessions } from "@/lib/auth/session";
 import { statusChangeEmail, notifySafely, cancellationConfirmationEmail } from "@/lib/email";
-import { updateSettings, updateWorkingHours } from "@/lib/settings";
+import { isDeletableAppointment, isPastAppointment } from "@/lib/appointment-phase";
+import { timeInTimeZone, todayInTimeZone } from "@/lib/datetime";
+import { updateSettings, updateWorkingHours, getSettings } from "@/lib/settings";
 import { createService, setServiceActive, updateService } from "@/lib/services";
 import {
   validateBlockedPeriod,
@@ -88,6 +91,47 @@ export async function completeAppointmentAction(formData: FormData): Promise<voi
   revalidatePath("/admin");
   revalidatePath("/admin/appointments");
   revalidatePath(`/admin/appointments/${id}`);
+}
+
+export async function noShowAppointmentAction(formData: FormData): Promise<void> {
+  await requireAuth();
+  const id = Number(formData.get("id"));
+  const appointment = await getAppointmentById(id);
+  if (!appointment) return;
+
+  const settings = await getSettings();
+  const today = todayInTimeZone(settings.timezone);
+  const now = timeInTimeZone(settings.timezone);
+  if (!isPastAppointment(appointment, today, now)) return;
+
+  const result = await updateAppointmentStatus(id, "no_show");
+  if (result.ok) {
+    const updated = await getAppointmentById(id);
+    if (updated) await notifySafely(statusChangeEmail(updated, appointment.status));
+  }
+  revalidatePath("/admin");
+  revalidatePath("/admin/appointments");
+  revalidatePath(`/admin/appointments/${id}`);
+  revalidatePath(`/booking/${appointment.reference}`);
+}
+
+export async function deleteAppointmentAction(formData: FormData): Promise<void> {
+  await requireAuth();
+  const id = Number(formData.get("id"));
+  if (!Number.isInteger(id) || id <= 0) return;
+  const appointment = await getAppointmentById(id);
+  if (!appointment) return;
+
+  const settings = await getSettings();
+  const today = todayInTimeZone(settings.timezone);
+  const now = timeInTimeZone(settings.timezone);
+  if (!isDeletableAppointment(appointment, today, now)) return;
+
+  await deleteAppointment(id);
+  revalidatePath("/admin");
+  revalidatePath("/admin/appointments");
+  revalidatePath(`/booking/${appointment.reference}`);
+  redirect("/admin/appointments");
 }
 
 export async function cancelAppointmentAction(

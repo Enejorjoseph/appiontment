@@ -54,10 +54,10 @@ export default async function BookStartPage({
         description="A quick look at how booking works, then you'll be taken to the booking form. It usually takes under two minutes."
         action={
           <Link
-            href="/find"
+            href="/appointments"
             className={buttonClass({ variant: "outline", size: "lg", className: HERO_ACTION_OUTLINE })}
           >
-            Find my appointment
+            View appointments
           </Link>
         }
       />
@@ -164,14 +164,21 @@ export default async function BookStartPage({
                 >
                   {selected ? "Continue to booking" : "Go to booking form"}
                 </Link>
+                <a
+                  href="#ai-chat"
+                  className={buttonClass({ variant: "outline", size: "lg", className: "w-full" })}
+                >
+                  <Icon name="chat" className="h-4 w-4" />
+                  Book with AI
+                </a>
                 <p className="text-center text-xs text-slate-500">
                   You&apos;ll receive a booking reference you can use to look up the appointment.
                 </p>
                 <Link
-                  href="/find"
+                  href="/appointments"
                   className={buttonClass({ variant: "ghost", size: "sm", className: "w-full" })}
                 >
-                  Already booked? Find my appointment
+                  Already booked? View appointments
                 </Link>
               </CardBody>
             </Card>
@@ -186,7 +193,7 @@ export default async function BookStartPage({
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 pb-14 sm:px-6">
+      <section id="ai-chat" className="mx-auto max-w-6xl scroll-mt-24 px-4 pb-14 sm:px-6">
         <div className="mb-6 flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 text-white shadow-sm shadow-brand-600/30">
             <Icon name="chat" className="h-5 w-5" />
@@ -194,7 +201,8 @@ export default async function BookStartPage({
           <div>
             <h2 className="text-lg font-semibold text-navy-800">Prefer to just ask?</h2>
             <p className="text-sm text-slate-600">
-              Chat with our AI assistant and it will find a service and book it for you.
+              Chat with our AI assistant and it will find a service, book it, or cancel an
+              existing appointment for you.
             </p>
           </div>
         </div>

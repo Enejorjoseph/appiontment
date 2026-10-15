@@ -126,14 +126,14 @@ export default async function HomePage() {
                 Book an Appointment
               </Link>
               <Link
-                href="/find"
+                href="/appointments"
                 className={buttonClass({
                   variant: "outline",
                   size: "lg",
                   className: "border-white/30 bg-white/10 text-white hover:border-white/40 hover:bg-white/20",
                 })}
               >
-                Find my appointment
+                View appointments
               </Link>
             </div>
 
@@ -429,14 +429,14 @@ export default async function HomePage() {
                 Book an Appointment
               </Link>
               <Link
-                href="/find"
+                href="/appointments"
                 className={buttonClass({
                   variant: "outline",
                   size: "lg",
                   className: "border-white/30 bg-white/10 text-white hover:border-white/40 hover:bg-white/20",
                 })}
               >
-                Find my appointment
+                View appointments
               </Link>
             </div>
           </div>
@@ -478,14 +478,14 @@ export default async function HomePage() {
               title="Need to change an appointment?"
               description={settings.cancellationPolicy}
               action={
-                <Link href="/find" className={buttonClass({ variant: "secondary", size: "sm" })}>
-                  Find appointment
+                <Link href="/appointments" className={buttonClass({ variant: "secondary", size: "sm" })}>
+                  View appointments
                 </Link>
               }
             />
             <CardBody className="text-sm text-slate-600">
-              Enter your booking reference and the email you used to book. We&apos;ll show the
-              appointment details so you can contact the clinic to cancel or reschedule.
+              Sign in to view your appointments and their status. From there you can contact the
+              clinic to cancel or reschedule.
             </CardBody>
           </Card>
         </div>

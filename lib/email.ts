@@ -106,7 +106,9 @@ export function statusChangeEmail(
           ? "marked as completed"
           : appointment.status === "rescheduled"
             ? "rescheduled"
-            : "updated";
+            : appointment.status === "no_show"
+              ? "marked as a no-show"
+              : "updated";
 
   return {
     to: appointment.patientEmail,

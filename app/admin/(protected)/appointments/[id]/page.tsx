@@ -1,13 +1,20 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { confirmAppointmentAction, completeAppointmentAction } from "@/app/actions/admin";
+import {
+  confirmAppointmentAction,
+  completeAppointmentAction,
+  deleteAppointmentAction,
+  noShowAppointmentAction,
+} from "@/app/actions/admin";
+import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
 import { CancelForm, RescheduleForm } from "@/components/admin/appointment-actions";
 import { StatusBadge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { getAppointmentById } from "@/lib/appointments";
-import { addDays, formatDateLong, formatTimeRange, formatTimestamp, todayInTimeZone } from "@/lib/datetime";
+import { getAppointmentPhase } from "@/lib/appointment-phase";
+import { addDays, formatDateLong, formatTimeRange, formatTimestamp, timeInTimeZone, todayInTimeZone } from "@/lib/datetime";
 import { formatDuration, formatNaira } from "@/lib/format";
 import { getSettings } from "@/lib/settings";
 import { ALLOWED_TRANSITIONS, STATUS_DESCRIPTIONS } from "@/lib/status";
@@ -28,8 +35,14 @@ export default async function AppointmentDetailPage({
 
   const settings = await getSettings();
   const today = todayInTimeZone(settings.timezone);
+  const now = timeInTimeZone(settings.timezone);
   const maxDate = addDays(today, settings.maxBookingDays);
   const transitions = ALLOWED_TRANSITIONS[appointment.status];
+  const phase = getAppointmentPhase(appointment, today, now);
+  const canConfirm = phase !== "past" && transitions.includes("confirmed");
+  const canComplete = transitions.includes("completed");
+  const canMarkNoShow = phase === "past" && transitions.includes("no_show");
+  const canReschedule = phase !== "past" && transitions.includes("rescheduled");
 
   return (
     <div className="space-y-6">
@@ -43,7 +56,7 @@ export default async function AppointmentDetailPage({
         eyebrow={appointment.reference}
         title={appointment.patientName}
         description={`${appointment.serviceName} · ${formatDateLong(appointment.appointmentDate)}`}
-        action={<StatusBadge status={appointment.status} />}
+        action={<StatusBadge status={appointment.status} phase={phase} />}
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -76,7 +89,9 @@ export default async function AppointmentDetailPage({
                 ) : null}
               </dl>
               <p className="mt-5 rounded-lg bg-slate-50 px-4 py-3 text-xs text-slate-500">
-                {STATUS_DESCRIPTIONS[appointment.status]}
+                {phase === "past"
+                  ? "This appointment's time has already passed and it has not been marked as completed, cancelled or a no-show."
+                  : STATUS_DESCRIPTIONS[appointment.status]}
               </p>
             </CardBody>
           </Card>
@@ -118,7 +133,7 @@ export default async function AppointmentDetailPage({
                 </p>
               ) : (
                 <>
-                  {transitions.includes("confirmed") ? (
+                  {canConfirm ? (
                     <form action={confirmAppointmentAction}>
                       <input type="hidden" name="id" value={appointment.id} />
                       <button type="submit" className={buttonClass({ variant: "primary", size: "md", className: "w-full" })}>
@@ -126,7 +141,7 @@ export default async function AppointmentDetailPage({
                       </button>
                     </form>
                   ) : null}
-                  {transitions.includes("completed") ? (
+                  {canComplete ? (
                     <form action={completeAppointmentAction}>
                       <input type="hidden" name="id" value={appointment.id} />
                       <button type="submit" className={buttonClass({ variant: "secondary", size: "md", className: "w-full" })}>
@@ -134,7 +149,15 @@ export default async function AppointmentDetailPage({
                       </button>
                     </form>
                   ) : null}
-                  {!transitions.includes("confirmed") && !transitions.includes("completed") ? (
+                  {canMarkNoShow ? (
+                    <form action={noShowAppointmentAction}>
+                      <input type="hidden" name="id" value={appointment.id} />
+                      <button type="submit" className={buttonClass({ variant: "ghost", size: "md", className: "w-full" })}>
+                        Mark as no-show
+                      </button>
+                    </form>
+                  ) : null}
+                  {!canConfirm && !canComplete && !canMarkNoShow ? (
                     <p className="text-sm text-slate-500">
                       No quick status actions are available for this state.
                     </p>
@@ -144,7 +167,7 @@ export default async function AppointmentDetailPage({
             </CardBody>
           </Card>
 
-          {transitions.includes("rescheduled") ? (
+          {canReschedule ? (
             <Card>
               <CardHeader title="Reschedule" description="Availability excludes this appointment's current slot." />
               <CardBody>
@@ -164,6 +187,30 @@ export default async function AppointmentDetailPage({
               <CardHeader title="Cancel appointment" description="The slot is released immediately." />
               <CardBody>
                 <CancelForm id={appointment.id} />
+              </CardBody>
+            </Card>
+          ) : null}
+
+          {phase !== "upcoming" ? (
+            <Card>
+              <CardHeader
+                title="Delete appointment"
+                description="Permanently remove this past appointment and its record."
+              />
+              <CardBody>
+                <form action={deleteAppointmentAction}>
+                  <input type="hidden" name="id" value={appointment.id} />
+                  <ConfirmSubmitButton
+                    className={buttonClass({ variant: "danger", size: "md", className: "w-full" })}
+                    title="Delete appointment?"
+                    message="This permanently removes the appointment record. This cannot be undone."
+                    confirmLabel="Delete appointment"
+                    cancelLabel="Keep"
+                    destructive
+                  >
+                    Delete appointment
+                  </ConfirmSubmitButton>
+                </form>
               </CardBody>
             </Card>
           ) : null}

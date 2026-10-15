@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { runBookingChat, type ChatMessage } from "@/lib/ai/booking-agent";
 import { isGeminiConfigured } from "@/lib/ai/gemini";
 import { getCurrentPatient } from "@/lib/auth/patient";
+import { clearChatHistory, getChatHistory, saveChatMessage } from "@/lib/chat-history";
 import { getClientIdentifier, rateLimit } from "@/lib/rate-limit";
 
 const MAX_MESSAGES = 20;
@@ -62,11 +63,56 @@ export async function POST(request: NextRequest) {
 
   try {
     const result = await runBookingChat(messages, patient);
+
+    const lastUserMessage = [...messages].reverse().find((message) => message.role === "user");
+    try {
+      if (lastUserMessage) await saveChatMessage(patient.id, lastUserMessage);
+      await saveChatMessage(patient.id, { role: "assistant", content: result.reply });
+    } catch (error) {
+      console.error("[chat] could not persist history", error);
+    }
+
     return NextResponse.json(result, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("[chat] assistant failed", error);
     return NextResponse.json(
       { error: "The assistant is unavailable right now. Please try again in a moment." },
+      { status: 502 },
+    );
+  }
+}
+
+export async function GET() {
+  const patient = await getCurrentPatient();
+  if (!patient) {
+    return NextResponse.json({ requiresLogin: true, messages: [] });
+  }
+
+  try {
+    const messages = await getChatHistory(patient.id);
+    return NextResponse.json({ messages }, { headers: { "Cache-Control": "no-store" } });
+  } catch (error) {
+    console.error("[chat] could not load history", error);
+    return NextResponse.json(
+      { error: "Could not load your chat history right now." },
+      { status: 502 },
+    );
+  }
+}
+
+export async function DELETE() {
+  const patient = await getCurrentPatient();
+  if (!patient) {
+    return NextResponse.json({ requiresLogin: true });
+  }
+
+  try {
+    await clearChatHistory(patient.id);
+    return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
+  } catch (error) {
+    console.error("[chat] could not clear history", error);
+    return NextResponse.json(
+      { error: "Could not clear your chat history right now." },
       { status: 502 },
     );
   }

@@ -5,7 +5,8 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { getAppointmentByReference } from "@/lib/appointments";
-import { formatDateLong, formatTimeRange } from "@/lib/datetime";
+import { getAppointmentPhase } from "@/lib/appointment-phase";
+import { formatDateLong, formatTimeRange, timeInTimeZone, todayInTimeZone } from "@/lib/datetime";
 import { formatDuration, formatNaira } from "@/lib/format";
 import { isEmailConfigured } from "@/lib/email";
 import { getSettings } from "@/lib/settings";
@@ -23,6 +24,11 @@ export default async function BookingConfirmationPage({
   if (!appointment) notFound();
 
   const settings = await getSettings();
+  const phase = getAppointmentPhase(
+    appointment,
+    todayInTimeZone(settings.timezone),
+    timeInTimeZone(settings.timezone),
+  );
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
@@ -59,7 +65,7 @@ export default async function BookingConfirmationPage({
       <Card className="mt-6">
         <CardHeader
           title="Appointment details"
-          action={<StatusBadge status={appointment.status} />}
+          action={<StatusBadge status={appointment.status} phase={phase} />}
         />
         <CardBody>
           <dl className="grid gap-4 sm:grid-cols-2">
@@ -85,7 +91,11 @@ export default async function BookingConfirmationPage({
       <Card className="mt-6">
         <CardHeader title="What happens next?" />
         <CardBody className="space-y-4 text-sm text-slate-600">
-          <p>{STATUS_DESCRIPTIONS[appointment.status]}</p>
+          <p>
+            {phase === "past"
+              ? "This appointment's time has passed. Contact the clinic if you need to follow up."
+              : STATUS_DESCRIPTIONS[appointment.status]}
+          </p>
           <p>{settings.cancellationPolicy}</p>
           <div className="flex items-start gap-2.5 rounded-xl border border-navy-100 bg-slate-50/70 px-4 py-3 text-xs text-slate-500">
             <Icon name="mail" className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />

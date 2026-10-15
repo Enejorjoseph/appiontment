@@ -13,7 +13,7 @@ const NAV = [
   { href: "/services", label: "Services" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
-  { href: "/find", label: "Find Appointment" },
+  { href: "/appointments", label: "View appointments" },
 ];
 
 function Logo() {
@@ -87,7 +87,9 @@ export function SiteHeader({
               </span>
               <form action={patientLogoutAction}>
                 <ConfirmSubmitButton
-                  message="Log out of your account?"
+                  title="Log out"
+                  message="You'll need to sign in again to book or manage appointments."
+                  confirmLabel="Log out"
                   className={cn(buttonClass({ variant: "ghost", size: "sm" }))}
                 >
                   Log out
@@ -162,7 +164,9 @@ export function SiteHeader({
                 <p className="px-3 pt-2 text-sm font-medium text-navy-700">{greetings}</p>
                 <form action={patientLogoutAction}>
                   <ConfirmSubmitButton
-                    message="Log out of your account?"
+                    title="Log out"
+                    message="You'll need to sign in again to book or manage appointments."
+                    confirmLabel="Log out"
                     className={cn(buttonClass({ variant: "ghost", size: "md" }), "mt-1 w-full")}
                   >
                     Log out

@@ -1,7 +1,13 @@
 import { computeSlots } from "@/lib/availability";
-import { createAppointment, getAppointmentByReference } from "@/lib/appointments";
-import { isValidISODate, isValidTime, todayInTimeZone, formatDateLong } from "@/lib/datetime";
-import { bookingConfirmationEmail, notifySafely } from "@/lib/email";
+import {
+  cancelPatientAppointment,
+  createAppointment,
+  getAppointmentByReference,
+  listPatientAppointments,
+} from "@/lib/appointments";
+import { isValidISODate, isValidTime, timeInTimeZone, todayInTimeZone, formatDateLong } from "@/lib/datetime";
+import { isPastAppointment } from "@/lib/appointment-phase";
+import { bookingConfirmationEmail, cancellationConfirmationEmail, notifySafely } from "@/lib/email";
 import { getService, listServices } from "@/lib/services";
 import { getSettings } from "@/lib/settings";
 import type { ClinicSettings, PatientUser } from "@/lib/types";
@@ -21,9 +27,18 @@ export interface BookingResult {
   autoConfirmed: boolean;
 }
 
+export interface CancellationResult {
+  reference: string;
+  serviceName: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+}
+
 export interface ChatResult {
   reply: string;
   booking?: BookingResult;
+  cancellation?: CancellationResult;
 }
 
 const TOOLS: GeminiFunctionDeclaration[] = [
@@ -60,12 +75,34 @@ const TOOLS: GeminiFunctionDeclaration[] = [
       required: ["serviceId", "date", "startTime"],
     },
   },
+  {
+    name: "list_my_appointments",
+    description:
+      "List the signed-in patient's upcoming appointments that can still be changed.",
+    parameters: { type: "object", properties: {} },
+  },
+  {
+    name: "cancel_appointment",
+    description:
+      "Cancel one of the signed-in patient's appointments. Only call this after the patient has confirmed which appointment to cancel.",
+    parameters: {
+      type: "object",
+      properties: {
+        reference: {
+          type: "string",
+          description: "The booking reference of the appointment to cancel, e.g. CP-1A2B3C4D.",
+        },
+        reason: { type: "string", description: "Optional short reason for cancelling." },
+      },
+      required: ["reference"],
+    },
+  },
 ];
 
 function systemInstruction(settings: ClinicSettings, patient: PatientUser, today: string): string {
   return [
     `You are the booking assistant for ${settings.clinicName}.`,
-    "You help patients book an appointment through a short, friendly chat.",
+    "You help patients book or cancel an appointment through a short, friendly chat.",
     "",
     `Today's date is ${today} (time zone: ${settings.timezone}).`,
     `Appointments need at least ${settings.minNoticeMinutes} minutes notice and can be booked up to ${settings.maxBookingDays} days ahead.`,
@@ -85,12 +122,17 @@ function systemInstruction(settings: ClinicSettings, patient: PatientUser, today
     "6. After booking, share the booking reference and that a confirmation email was sent.",
     "7. Keep replies short (1-3 sentences). Do not discuss anything unrelated to the clinic.",
     `8. The clinic's cancellation policy: ${settings.cancellationPolicy}`,
+    "9. If the patient wants to cancel, call list_my_appointments to show their upcoming appointments (or ask for the booking reference if they already have it).",
+    "10. Before cancelling, confirm which appointment it is. Only call cancel_appointment after the patient confirms, and never cancel an appointment they did not choose.",
+    "11. After cancelling, confirm it is cancelled and let them know they can book a new time whenever they like.",
+    "12. Appointments whose time has already passed cannot be cancelled or rescheduled. If the patient asks about a past appointment, tell them to contact the clinic directly.",
   ].join("\n");
 }
 
 interface ToolOutcome {
   response: Record<string, unknown>;
   booking?: BookingResult;
+  cancellation?: CancellationResult;
 }
 
 async function executeTool(
@@ -209,6 +251,70 @@ async function executeTool(
       };
     }
 
+    if (name === "list_my_appointments") {
+      const settings = await getSettings();
+      const today = todayInTimeZone(settings.timezone);
+      const now = timeInTimeZone(settings.timezone);
+      const appointments = await listPatientAppointments(patient.id, { from: today });
+      const cancellable = appointments.filter(
+        (appointment) =>
+          appointment.status !== "cancelled" &&
+          appointment.status !== "completed" &&
+          appointment.status !== "no_show" &&
+          !isPastAppointment(appointment, today, now),
+      );
+      return {
+        response: {
+          appointments: cancellable.map((appointment) => ({
+            reference: appointment.reference,
+            service: appointment.serviceName,
+            date: appointment.appointmentDate,
+            dateLabel: formatDateLong(appointment.appointmentDate),
+            startTime: appointment.startTime,
+            endTime: appointment.endTime,
+            status: appointment.status,
+          })),
+          note:
+            cancellable.length === 0
+              ? "This patient has no upcoming appointments to cancel."
+              : undefined,
+        },
+      };
+    }
+
+    if (name === "cancel_appointment") {
+      const reference = String(args.reference ?? "").trim();
+      const reason = typeof args.reason === "string" ? args.reason : "";
+      if (!reference) {
+        return { response: { ok: false, error: "A booking reference is required." } };
+      }
+
+      const outcome = await cancelPatientAppointment(patient.id, reference, reason);
+      if (!outcome.ok) {
+        return { response: { ok: false, error: outcome.reason } };
+      }
+
+      await notifySafely(cancellationConfirmationEmail(outcome.appointment));
+
+      const cancellation: CancellationResult = {
+        reference: outcome.appointment.reference,
+        serviceName: outcome.appointment.serviceName,
+        date: outcome.appointment.appointmentDate,
+        startTime: outcome.appointment.startTime,
+        endTime: outcome.appointment.endTime,
+      };
+
+      return {
+        response: {
+          ok: true,
+          reference: outcome.appointment.reference,
+          service: outcome.appointment.serviceName,
+          dateLabel: formatDateLong(outcome.appointment.appointmentDate),
+        },
+        cancellation,
+      };
+    }
+
     return { response: { ok: false, error: `Unknown tool: ${name}` } };
   } catch (error) {
     return { response: { ok: false, error: error instanceof Error ? error.message : "Tool failed." } };
@@ -236,6 +342,7 @@ export async function runBookingChat(
   }));
 
   let booking: BookingResult | undefined;
+  let cancellation: CancellationResult | undefined;
 
   for (let step = 0; step < MAX_STEPS; step += 1) {
     const candidate = await generateContent({
@@ -255,6 +362,7 @@ export async function runBookingChat(
       return {
         reply: reply || "Sorry, I didn't catch that. Could you rephrase?",
         booking,
+        cancellation,
       };
     }
 
@@ -266,6 +374,7 @@ export async function runBookingChat(
       const call = part.functionCall!;
       const outcome = await executeTool(call.name, call.args ?? {}, patient);
       if (outcome.booking) booking = outcome.booking;
+      if (outcome.cancellation) cancellation = outcome.cancellation;
       responseParts.push({
         functionResponse: {
           name: call.name,
@@ -280,5 +389,6 @@ export async function runBookingChat(
   return {
     reply: "Sorry, that's taking longer than expected. Please try again or use the booking form.",
     booking,
+    cancellation,
   };
 }

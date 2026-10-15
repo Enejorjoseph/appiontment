@@ -363,8 +363,8 @@ export function BookingForm({
             <p className="text-center text-xs text-slate-500">
               You will receive a booking reference you can use to look up the appointment.
             </p>
-            <a href="/find" className={buttonClass({ variant: "ghost", size: "sm", className: "w-full" })}>
-              Already booked? Find my appointment
+            <a href="/appointments" className={buttonClass({ variant: "ghost", size: "sm", className: "w-full" })}>
+              Already booked? View appointments
             </a>
           </CardBody>
         </Card>

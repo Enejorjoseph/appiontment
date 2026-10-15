@@ -123,6 +123,11 @@ to run more than once.
   - `logout_admin(token)` invalidates a session.
   - Password hashes are produced with Postgres `pgcrypto` (`crypt` /
     `gen_salt('bf')`); hashes never leave the database.
+- `chat_messages` (AI booking-assistant history, one row per message and linked
+  to a patient) also has RLS enabled with **no** policies. It is reached only
+  through the `get_chat_history`, `save_chat_message` and `clear_chat_history`
+  `SECURITY DEFINER` functions, so history is persisted server-side rather than
+  in the browser.
 
 ## Getting started
 
@@ -219,11 +224,18 @@ Allowed transitions are enforced centrally in `lib/status.ts`:
 
 | Status        | Meaning                                             | Can move to                         |
 | ------------- | --------------------------------------------------- | ----------------------------------- |
-| `pending`     | Submitted, awaiting staff confirmation.             | confirmed, rescheduled, cancelled   |
-| `confirmed`   | Confirmed and expected to take place.               | completed, rescheduled, cancelled   |
-| `rescheduled` | Time was changed to a new slot.                     | confirmed, completed, cancelled     |
+| `pending`     | Submitted, awaiting staff confirmation.             | confirmed, rescheduled, cancelled, no_show |
+| `confirmed`   | Confirmed and expected to take place.               | completed, rescheduled, cancelled, no_show |
+| `rescheduled` | Time was changed to a new slot.                     | confirmed, completed, cancelled, no_show |
 | `completed`   | The patient attended; appointment finished.         | — (terminal)                        |
+| `no_show`     | The patient did not attend; slot released.          | — (terminal)                        |
 | `cancelled`   | Cancelled; the time slot is released.               | — (terminal)                        |
+
+An additional **display-only** phase, `past`, is derived from the clock by
+`lib/appointment-phase.ts`. A `pending`, `confirmed` or `rescheduled`
+appointment whose end time has passed is shown as "Past"; it can no longer be
+cancelled or rescheduled by the patient, and staff can mark it `completed` or
+`no_show`. The phase is never stored in the database.
 
 ## Double-booking prevention
 

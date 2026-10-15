@@ -8,8 +8,11 @@ import {
   getAppointmentByReference,
 } from "@/lib/appointments";
 import { getCurrentPatient } from "@/lib/auth/patient";
+import { getAppointmentPhase } from "@/lib/appointment-phase";
+import { timeInTimeZone, todayInTimeZone } from "@/lib/datetime";
 import { bookingConfirmationEmail, notifySafely } from "@/lib/email";
 import { getClientIdentifier, rateLimit } from "@/lib/rate-limit";
+import { getSettings } from "@/lib/settings";
 import { STATUS_LABELS } from "@/lib/status";
 import { validateBooking, validateLookup } from "@/lib/validation";
 import type { FormState, LookupState } from "@/lib/action-state";
@@ -105,10 +108,20 @@ export async function lookupAppointmentAction(
     };
   }
 
+  const settings = await getSettings();
+  const phase = getAppointmentPhase(
+    appointment,
+    todayInTimeZone(settings.timezone),
+    timeInTimeZone(settings.timezone),
+  );
+
   return {
     ok: true,
     errors: {},
-    message: `Appointment found. Current status: ${STATUS_LABELS[appointment.status]}.`,
+    message:
+      phase === "past"
+        ? "Appointment found. This appointment's date has already passed."
+        : `Appointment found. Current status: ${STATUS_LABELS[appointment.status]}.`,
     appointment: {
       reference: appointment.reference,
       patientName: appointment.patientName,
@@ -119,6 +132,7 @@ export async function lookupAppointmentAction(
       startTime: appointment.startTime,
       endTime: appointment.endTime,
       status: appointment.status,
+      phase,
       reason: appointment.reason,
       createdAt: appointment.createdAt,
     },

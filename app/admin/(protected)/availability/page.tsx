@@ -73,7 +73,11 @@ export default async function AdminAvailabilityPage() {
                     <form action={deleteBlockedPeriodAction}>
                       <input type="hidden" name="id" value={period.id} />
                       <ConfirmSubmitButton
-                        message="Remove this blocked period?"
+                        title="Remove blocked period?"
+                        message="This time will become bookable again for patients."
+                        confirmLabel="Remove"
+                        cancelLabel="Keep it"
+                        destructive
                         className={buttonClass({ variant: "ghost", size: "sm", className: "text-red-600 hover:bg-red-50" })}
                       >
                         Remove

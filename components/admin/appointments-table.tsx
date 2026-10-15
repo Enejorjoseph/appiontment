@@ -1,16 +1,26 @@
 import Link from "next/link";
-import { confirmAppointmentAction, completeAppointmentAction } from "@/app/actions/admin";
+import {
+  confirmAppointmentAction,
+  completeAppointmentAction,
+  deleteAppointmentAction,
+  noShowAppointmentAction,
+} from "@/app/actions/admin";
 import { StatusBadge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
+import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { getAppointmentPhase } from "@/lib/appointment-phase";
 import { formatDateMedium, formatTimeRange } from "@/lib/datetime";
 import { formatNaira } from "@/lib/format";
 import type { Appointment } from "@/lib/types";
 
-function Actions({ appointment }: { appointment: Appointment }) {
+function Actions({ appointment, today, now }: { appointment: Appointment; today: string; now: string }) {
+  const phase = getAppointmentPhase(appointment, today, now);
+  const past = phase === "past";
+
   return (
     <>
-      {appointment.status === "pending" ? (
+      {!past && appointment.status === "pending" ? (
         <form action={confirmAppointmentAction}>
           <input type="hidden" name="id" value={appointment.id} />
           <button type="submit" className={buttonClass({ variant: "primary", size: "sm" })}>
@@ -26,6 +36,32 @@ function Actions({ appointment }: { appointment: Appointment }) {
           </button>
         </form>
       ) : null}
+      {past &&
+      (appointment.status === "pending" ||
+        appointment.status === "confirmed" ||
+        appointment.status === "rescheduled") ? (
+        <form action={noShowAppointmentAction}>
+          <input type="hidden" name="id" value={appointment.id} />
+          <button type="submit" className={buttonClass({ variant: "ghost", size: "sm" })}>
+            No-show
+          </button>
+        </form>
+      ) : null}
+      {phase !== "upcoming" ? (
+        <form action={deleteAppointmentAction}>
+          <input type="hidden" name="id" value={appointment.id} />
+          <ConfirmSubmitButton
+            className={buttonClass({ variant: "ghost", size: "sm", className: "text-red-600 hover:bg-red-50" })}
+            title="Delete appointment?"
+            message="This permanently removes the appointment record. This cannot be undone."
+            confirmLabel="Delete"
+            cancelLabel="Keep"
+            destructive
+          >
+            Delete
+          </ConfirmSubmitButton>
+        </form>
+      ) : null}
       <Link
         href={`/admin/appointments/${appointment.id}`}
         className={buttonClass({ variant: "ghost", size: "sm" })}
@@ -38,11 +74,15 @@ function Actions({ appointment }: { appointment: Appointment }) {
 
 export function AppointmentsTable({
   appointments,
+  today,
+  now,
   emptyTitle = "No appointments found",
   emptyDescription = "Appointments will appear here once patients book.",
   compact = false,
 }: {
   appointments: Appointment[];
+  today: string;
+  now: string;
   emptyTitle?: string;
   emptyDescription?: string;
   compact?: boolean;
@@ -64,7 +104,7 @@ export function AppointmentsTable({
                   <p className="truncate text-xs text-slate-500">{appointment.patientEmail}</p>
                 ) : null}
               </div>
-              <StatusBadge status={appointment.status} />
+              <StatusBadge status={appointment.status} phase={getAppointmentPhase(appointment, today, now)} />
             </div>
 
             <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
@@ -87,7 +127,7 @@ export function AppointmentsTable({
             </dl>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Actions appointment={appointment} />
+              <Actions appointment={appointment} today={today} now={now} />
             </div>
           </li>
         ))}
@@ -124,11 +164,11 @@ export function AppointmentsTable({
                   </p>
                 </td>
                 <td className="py-3 pr-4">
-                  <StatusBadge status={appointment.status} />
+                  <StatusBadge status={appointment.status} phase={getAppointmentPhase(appointment, today, now)} />
                 </td>
                 <td className="py-3">
                   <div className="flex items-center justify-end gap-2">
-                    <Actions appointment={appointment} />
+                    <Actions appointment={appointment} today={today} now={now} />
                   </div>
                 </td>
               </tr>

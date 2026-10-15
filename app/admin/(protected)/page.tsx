@@ -6,13 +6,14 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
+import { getAppointmentPhase } from "@/lib/appointment-phase";
 import {
   getStats,
   recentAppointments,
   todayAppointments,
   upcomingAppointments,
 } from "@/lib/appointments";
-import { formatDateMedium, formatTime12, formatTimestamp, todayInTimeZone } from "@/lib/datetime";
+import { formatDateMedium, formatTime12, formatTimestamp, timeInTimeZone, todayInTimeZone } from "@/lib/datetime";
 import { isEmailConfigured } from "@/lib/email";
 import { getSettings } from "@/lib/settings";
 
@@ -21,6 +22,7 @@ export const metadata = { title: "Dashboard" };
 export default async function AdminDashboardPage() {
   const settings = await getSettings();
   const today = todayInTimeZone(settings.timezone);
+  const now = timeInTimeZone(settings.timezone);
   const stats = await getStats();
   const todays = await todayAppointments(today);
   const upcoming = await upcomingAppointments(today, 6);
@@ -51,13 +53,15 @@ export default async function AdminDashboardPage() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total" value={stats.total} accent="navy" />
         <StatCard label="Today" value={stats.today} accent="brand" hint={formatDateMedium(today)} />
         <StatCard label="Upcoming" value={stats.upcoming} accent="violet" hint="Future active bookings" />
         <StatCard label="Pending" value={stats.pending} accent="amber" />
         <StatCard label="Confirmed" value={stats.confirmed} accent="brand" />
         <StatCard label="Completed" value={stats.completed} accent="slate" />
+        <StatCard label="Cancelled" value={stats.cancelled} accent="navy" />
+        <StatCard label="No-shows" value={stats.noShow} accent="slate" />
       </div>
 
       <Card>
@@ -73,6 +77,8 @@ export default async function AdminDashboardPage() {
         <CardBody>
           <AppointmentsTable
             appointments={todays}
+            today={today}
+            now={now}
             compact
             emptyTitle="No appointments today"
             emptyDescription="Nothing is booked for today. New bookings will appear here."
@@ -94,6 +100,8 @@ export default async function AdminDashboardPage() {
           <CardBody>
             <AppointmentsTable
               appointments={upcoming}
+              today={today}
+              now={now}
               compact
               emptyTitle="No upcoming appointments"
               emptyDescription="There are no future active appointments yet."
@@ -124,7 +132,7 @@ export default async function AdminDashboardPage() {
                       </p>
                     </div>
                     <span className="ml-auto">
-                      <StatusBadge status={appointment.status} />
+                      <StatusBadge status={appointment.status} phase={getAppointmentPhase(appointment, today, now)} />
                     </span>
                   </li>
                 ))}
